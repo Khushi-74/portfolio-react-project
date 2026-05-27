@@ -33,7 +33,38 @@ stages:
           ArtifactName: 'react-build'
           publishLocation: 'Container'
 
+- stage: Deploy
+  displayName: Deploy to Azure App Service
 
+  dependsOn: Build
 
+  jobs:
 
+  - deployment: DeployWeb
+    displayName: Deploy React App
 
+    environment: production
+
+    strategy:
+      runOnce:
+        deploy:
+
+          steps:
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'react-build'
+              downloadPath: '$(Pipeline.Workspace)'
+
+          
+
+          - task: AzureRmWebAppDeployment@5
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'azure-service-connection'
+              appType: 'webAppLinux'
+              WebAppName: 'khushi-react-portfolio'
+              packageForLinux: '$(Pipeline.Workspace)/react-build'
+              RuntimeStack: 'NODE|22-lts'
+              DeploymentTypeLinux: 'oneDeploy'
